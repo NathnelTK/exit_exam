@@ -1,0 +1,20 @@
+{
+  "name": "exit-exam-planner",
+  "version": "1.0.0",
+  "description": "Exit - Exam Preparation Planner and Notifier",
+  "main": "index.js",
+  "scripts": {
+    "install-all": "npm install && cd client && npm install && cd ../server && npm install",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm start",
+    "build": "cd client && npm run build"
+  },
+  "keywords": ["exam", "planner", "study", "notification"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
+
