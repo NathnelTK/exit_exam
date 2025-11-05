@@ -8,7 +8,7 @@ const authenticate = (req, res, next) => {
       return res.status(401).json({ message: 'No authentication token' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, 'your-secret-key');
     req.userId = decoded.userId;
     next();
   } catch (error) {

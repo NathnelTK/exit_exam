@@ -9,16 +9,14 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "mongoose": "^8.0.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
     "node-cron": "^3.0.3",
     "web-push": "^3.6.6",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "sqlite3": "^5.1.6"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   }
 }
-

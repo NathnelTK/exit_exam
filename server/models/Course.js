@@ -1,37 +1,31 @@
-const mongoose = require('mongoose');
+const db = require('../database.js');
 
-const courseSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  name: {
-    type: String,
-    required: true
-  },
-  weight: {
-    type: Number,
-    required: true,
-    min: 1
-  },
-  difficulty: {
-    type: Number,
-    default: 3,
-    min: 1,
-    max: 5
-  },
-  color: {
-    type: String,
-    default: '#3b82f6'
-  },
-  completed: {
-    type: Boolean,
-    default: false
-  }
-}, {
-  timestamps: true
-});
+const Course = {
+    create: (name, description, userId) => {
+        const sql = 'INSERT INTO courses (name, description, userId) VALUES (?, ?, ?)';
+        return new Promise((resolve, reject) => {
+            db.run(sql, [name, description, userId], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ id: this.lastID, name, description, userId });
+                }
+            });
+        });
+    },
 
-module.exports = mongoose.model('Course', courseSchema);
+    findByUserId: (userId) => {
+        const sql = 'SELECT * FROM courses WHERE userId = ?';
+        return new Promise((resolve, reject) => {
+            db.all(sql, [userId], (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
+    }
+};
 
+module.exports = Course;

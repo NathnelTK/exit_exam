@@ -1,41 +1,31 @@
-const mongoose = require('mongoose');
+const db = require('../database.js');
 
-const dailyTaskSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  courseId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Course',
-    required: true
-  },
-  date: {
-    type: Date,
-    required: true
-  },
-  allocatedMinutes: {
-    type: Number,
-    required: true
-  },
-  completedMinutes: {
-    type: Number,
-    default: 0
-  },
-  completed: {
-    type: Boolean,
-    default: false
-  },
-  notes: {
-    type: String,
-    default: ''
-  }
-}, {
-  timestamps: true
-});
+const DailyTask = {
+    create: (studyPlanId, task, userId) => {
+        const sql = 'INSERT INTO daily_tasks (studyPlanId, task, userId) VALUES (?, ?, ?)';
+        return new Promise((resolve, reject) => {
+            db.run(sql, [studyPlanId, task, userId], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ id: this.lastID, studyPlanId, task, userId });
+                }
+            });
+        });
+    },
 
-dailyTaskSchema.index({ userId: 1, courseId: 1, date: 1 }, { unique: true });
+    findByUserId: (userId) => {
+        const sql = 'SELECT * FROM daily_tasks WHERE userId = ?';
+        return new Promise((resolve, reject) => {
+            db.all(sql, [userId], (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
+    }
+};
 
-module.exports = mongoose.model('DailyTask', dailyTaskSchema);
-
+module.exports = DailyTask;

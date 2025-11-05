@@ -1,23 +1,31 @@
-const mongoose = require('mongoose');
+const db = require('../database.js');
 
-const notificationSubscriptionSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  endpoint: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  keys: {
-    p256dh: String,
-    auth: String
-  }
-}, {
-  timestamps: true
-});
+const NotificationSubscription = {
+    create: (userId, subscription) => {
+        const sql = 'INSERT INTO notifications (userId, subscription) VALUES (?, ?)';
+        return new Promise((resolve, reject) => {
+            db.run(sql, [userId, JSON.stringify(subscription)], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ id: this.lastID, userId, subscription });
+                }
+            });
+        });
+    },
 
-module.exports = mongoose.model('NotificationSubscription', notificationSubscriptionSchema);
+    findByUserId: (userId) => {
+        const sql = 'SELECT * FROM notifications WHERE userId = ?';
+        return new Promise((resolve, reject) => {
+            db.all(sql, [userId], (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows.map(row => ({...row, subscription: JSON.parse(row.subscription)})));
+                }
+            });
+        });
+    }
+};
 
+module.exports = NotificationSubscription;
