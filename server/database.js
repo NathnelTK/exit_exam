@@ -25,6 +25,23 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
                 FOREIGN KEY (userId) REFERENCES users (id)
             )`);
 
+            // Migrations: ensure new course fields exist
+            db.run(`ALTER TABLE courses ADD COLUMN weight INTEGER DEFAULT 10`, (err) => {
+                if (err && !/duplicate column name/i.test(err.message)) {
+                    console.warn('courses.weight migration error:', err.message);
+                }
+            });
+            db.run(`ALTER TABLE courses ADD COLUMN difficulty INTEGER DEFAULT 3`, (err) => {
+                if (err && !/duplicate column name/i.test(err.message)) {
+                    console.warn('courses.difficulty migration error:', err.message);
+                }
+            });
+            db.run(`ALTER TABLE courses ADD COLUMN color TEXT DEFAULT '#3b82f6'`, (err) => {
+                if (err && !/duplicate column name/i.test(err.message)) {
+                    console.warn('courses.color migration error:', err.message);
+                }
+            });
+
             db.run(`CREATE TABLE IF NOT EXISTS study_plans (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 courseId INTEGER,
@@ -57,6 +74,28 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
                 FOREIGN KEY (studyPlanId) REFERENCES study_plans (id),
                 FOREIGN KEY (userId) REFERENCES users (id)
             )`);
+
+            // Migrations: additional fields for planning and progress
+            db.run(`ALTER TABLE daily_tasks ADD COLUMN allocatedMinutes INTEGER DEFAULT 0`, (err) => {
+                if (err && !/duplicate column name/i.test(err.message)) {
+                    console.warn('daily_tasks.allocatedMinutes migration error:', err.message);
+                }
+            });
+            db.run(`ALTER TABLE daily_tasks ADD COLUMN completedMinutes INTEGER DEFAULT 0`, (err) => {
+                if (err && !/duplicate column name/i.test(err.message)) {
+                    console.warn('daily_tasks.completedMinutes migration error:', err.message);
+                }
+            });
+            db.run(`ALTER TABLE daily_tasks ADD COLUMN date TEXT`, (err) => {
+                if (err && !/duplicate column name/i.test(err.message)) {
+                    console.warn('daily_tasks.date migration error:', err.message);
+                }
+            });
+            db.run(`ALTER TABLE daily_tasks ADD COLUMN courseId INTEGER`, (err) => {
+                if (err && !/duplicate column name/i.test(err.message)) {
+                    console.warn('daily_tasks.courseId migration error:', err.message);
+                }
+            });
 
             db.run(`CREATE TABLE IF NOT EXISTS notifications (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

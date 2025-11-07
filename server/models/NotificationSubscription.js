@@ -25,6 +25,26 @@ const NotificationSubscription = {
                 }
             });
         });
+    },
+
+    findAll: () => {
+        const sql = 'SELECT * FROM notifications';
+        return new Promise((resolve, reject) => {
+            db.all(sql, [], (err, rows) => {
+                if (err) return reject(err);
+                resolve(rows.map(row => ({...row, subscription: JSON.parse(row.subscription)})));
+            });
+        });
+    },
+
+    deleteById: (id) => {
+        const sql = 'DELETE FROM notifications WHERE id = ?';
+        return new Promise((resolve, reject) => {
+            db.run(sql, [id], function(err) {
+                if (err) return reject(err);
+                resolve(this.changes > 0);
+            });
+        });
     }
 };
 

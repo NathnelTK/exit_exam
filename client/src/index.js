@@ -10,3 +10,14 @@ root.render(
   </React.StrictMode>
 );
 
+// Register service worker for push notifications
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then((registration) => {
+      window.swReg = registration;
+    }).catch((err) => {
+      console.error('SW registration failed:', err);
+    });
+  });
+}
+

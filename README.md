@@ -1,148 +1,97 @@
-<<<<<<< HEAD
-# exit_exam
-exam preparation planner for ethiopia exit exam
-=======
 # Exit - Exam Preparation Planner & Notifier
 
 A comprehensive exam preparation app that helps you plan, track, and stay on top of your study schedule with intelligent time allocation and daily notifications.
 
 ## Features
 
-### Core Features
-- **🕒 Countdown Timer**: Big, beautiful countdown timer showing days, hours, minutes, and seconds until your exam
-- **📚 Course Management**: Add courses with custom weights (question count) and difficulty ratings (1-5)
-- **📅 Smart Study Planning**: Automatically generates daily study plans based on:
-  - Time remaining until exam
-  - Course weight (number of questions)
-  - Course difficulty level
-  - Your daily study hours
-- **✅ Progress Tracking**: Mark tasks complete and track actual study time vs planned time
-- **🔔 Daily Notifications**: Receive browser notifications at your chosen time each day
-- **🎨 Notion-like Customization**: 
-  - Light/Dark theme
-  - Custom primary and background colors
-  - Grid or List layout options
-  - Per-course color coding
+- **🕒 Countdown Timer**: Live countdown to your exam date
+- **📚 Course Management**: Add/edit/delete courses with `weight`, `difficulty (1-5)`, and `color`
+- **📅 Smart Study Planning**: Generate daily plan proportional to `weight × difficulty` and your daily hours
+- **✅ Progress Tracking**: Mark tasks complete and record actual minutes studied
+- **🔔 Daily Notifications**: Web push at your configured time
+- **🎨 Customization**: Light/dark, primary/background colors, grid/list layout
+- **🔐 Auth**: Register/login (JWT)
 
-### Additional Features
-- User authentication (register/login)
-- Responsive design for mobile and desktop
-- Real-time countdown updates
-- Visual progress bars
-- Course difficulty weighting in time allocation
-- Editable daily tasks
+## What’s new in this update
+
+- Backend data model extended:
+  - `courses`: added `weight INTEGER`, `difficulty INTEGER`, `color TEXT`
+  - `daily_tasks`: added `allocatedMinutes`, `completedMinutes`, `date`, `courseId`
+- New/updated endpoints:
+  - `POST /api/study-plans/regenerate` — regenerate today’s tasks via proportional allocation
+  - `GET /api/daily-tasks/today` — today’s tasks joined with course color/name
+  - `PUT /api/daily-tasks/:id` — toggle completion and update minutes
+  - `PUT /api/courses/:id`, `DELETE /api/courses/:id`
+  - Responses normalized to use `_id` for client compatibility
+- Notifications:
+  - Scheduler rewritten for SQLite models and user settings `notificationTime`
+  - Client service worker (`public/sw.js`) and subscription UI in `Settings` (requires VAPID keys)
 
 ## Tech Stack
 
-### Backend
-- Node.js & Express
-- MongoDB with Mongoose
-- JWT authentication
-- Web Push API for notifications
-- Node-cron for scheduled tasks
+- Backend: Node.js, Express, SQLite (`sqlite3`), JWT, `node-cron`, Web Push API
+- Frontend: React 18 (CRA), React Router, Axios, React Icons, React Colorful
 
-### Frontend
-- React 18
-- React Router for navigation
-- Axios for API calls
-- React Icons
-- React Colorful for color picking
-- CSS with custom properties for theming
+## Run locally (Windows PowerShell)
 
-## Installation
+1) Open PowerShell in project root:
+```powershell
+cd 'C:\Users\PC\Saved Games\exit_exam'
+```
 
-### Prerequisites
-- Node.js (v14 or higher)
-- MongoDB (local or MongoDB Atlas)
-- npm or yarn
+2) Install dependencies (root installs client and server):
+```powershell
+npm run install-all
+```
 
-### Setup Steps
+3) Start dev servers (backend + frontend concurrently):
+```powershell
+npm run dev
+```
 
-1. **Clone/Navigate to the project**
-   ```bash
-   cd C:\Users\Administrator\Desktop\exit
-   ```
+Frontend: `http://localhost:3000`
 
-2. **Install root dependencies**
-   ```bash
-   npm install
-   ```
+API: `http://localhost:5000`
 
-3. **Install server dependencies**
-   # Exit - Exam Preparation Planner & Notifier
+## Environment & Push Notifications
 
-   Lightweight exam preparation planner that helps you schedule study time, manage courses, track daily tasks, and receive browser notifications.
+- SQLite DB file: `server/db.sqlite` (auto-created)
+- Optional: set `PORT` to change server port
+- Web Push (browser):
+  - Set `REACT_APP_VAPID_PUBLIC_KEY` in `client` env before `npm start`
+  - Set `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in server env if you enable `webpush.setVapidDetails`
+  - In Settings page, click “Enable Push Notifications” to subscribe
 
-   This repository uses SQLite (built-in) for simplicity — no MongoDB required.
+## Build frontend
 
-   ## What changed
-   - Replaced MongoDB with SQLite using the `sqlite3` package. The database file is `server/db.sqlite` (auto-created).
-   - Backend uses Express and schedules notifications with `node-cron`.
-   - Root npm scripts help install deps and run client + server concurrently.
+```powershell
+npm run build
+```
 
-   ## Run locally (exact steps for Windows PowerShell)
+## Building an APK (optional)
 
-   1) Open PowerShell in the project root (example path shown):
-   ```powershell
-   cd 'C:\Users\PC\Saved Games\exit_exam'
-   ```
+This is a web app. To ship an Android APK, wrap the `client/build` with a native container (e.g., Capacitor):
 
-   2) Install all dependencies (root installs client and server deps):
-   ```powershell
-   npm run install-all
-   ```
+```powershell
+cd client
+npm install @capacitor/core @capacitor/cli @capacitor/android --save
+npx cap init exit-exam-planner com.example.exitexamplanner --web-dir build
+npm run build
+npx cap add android
+npx cap copy
+npx cap open android
+```
 
-   3) Start the app in development (runs backend and frontend concurrently):
-   ```powershell
-   npm run dev
-   ```
+Build APK in Android Studio: Build > Build Bundle(s)/APK(s) > Build APK(s).
 
-   Alternative: run server and client in separate terminals
+Note: Push inside an APK requires native FCM integration (Capacitor Push Notifications) rather than browser web-push.
 
-   - Server:
-   ```powershell
-   cd 'C:\Users\PC\Saved Games\exit_exam\server'
-   npm run dev
-   ```
+## Scripts
 
-   - Client:
-   ```powershell
-   cd 'C:\Users\PC\Saved Games\exit_exam\client'
-   npm start
-   ```
+- `npm run install-all` — install root, client, and server deps
+- `npm run dev` — start backend and frontend concurrently
+- `npm run build` — build the React app (client)
 
-   4) Open the frontend in your browser:
-   http://localhost:3000
+## License
 
-   API base URL: http://localhost:5000 (server default port)
-
-   ## Notes on database & env
-   - The app uses SQLite. The DB file `db.sqlite` will be created automatically by `server/database.js` in the `server` folder.
-   - No MongoDB setup is required.
-   - Optional env var: `PORT` (if you want the server to run on a different port). There are currently no required `.env` keys for basic local usage.
-
-   ## Git identity and commit
-   - If Git complains about unknown identity (fatal: unable to auto-detect email address), set your local repo identity:
-   ```powershell
-   git config user.name "NathnelTK"
-   git config user.email "you@example.com"
-   ```
-   - In this session I set a local git name/email to commit README changes (name: `NathnelTK`, email: `NathnelTK@users.noreply.github.com`). You can change that to your preferred email.
-
-   ## Scripts
-   - `npm run install-all` — install root, client, and server dependencies
-   - `npm run dev` — start server (nodemon) and client (CRA) concurrently
-   - `npm run build` — build the React app (client)
-
-   ## Troubleshooting
-   - If ports are in use, set `PORT` environment variable before starting the server, e.g. in PowerShell:
-   ```powershell
-   $env:PORT = 6000; npm run dev
-   ```
-   - If push fails when I push README changes, ensure your Git credentials (SSH key or credential helper) are set locally.
-
-   ## License
-   ISC
-
-   ---
-   Updated README: documents SQLite usage and exact local run commands.
+ISC

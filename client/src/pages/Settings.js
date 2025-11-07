@@ -61,6 +61,33 @@ const Settings = ({ token, customization, setCustomization, setToken }) => {
     navigate('/login');
   };
 
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+    return outputArray;
+  };
+
+  const handleSubscribeNotifications = async () => {
+    try {
+      if (!('serviceWorker' in navigator)) return alert('Service workers not supported in this browser');
+      const reg = window.swReg || (await navigator.serviceWorker.ready);
+      const vapidPublicKey = process.env.REACT_APP_VAPID_PUBLIC_KEY;
+      if (!vapidPublicKey) return alert('Missing REACT_APP_VAPID_PUBLIC_KEY');
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+      });
+      await axios.post('/api/notifications/subscribe', sub, axiosConfig);
+      alert('Subscribed to notifications');
+    } catch (e) {
+      console.error('Subscribe failed', e);
+      alert('Failed to subscribe to notifications');
+    }
+  };
+
   return (
     <div className="settings">
       <header className="settings-header">
@@ -203,6 +230,12 @@ const Settings = ({ token, customization, setCustomization, setToken }) => {
               )}
             </div>
           </div>
+        </section>
+
+        <section className="settings-section">
+          <h2>Notifications</h2>
+          <p>Enable daily push notifications at your configured time.</p>
+          <button type="button" className="btn-primary" onClick={handleSubscribeNotifications}>Enable Push Notifications</button>
         </section>
       </div>
     </div>
