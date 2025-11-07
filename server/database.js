@@ -36,6 +36,18 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
                 FOREIGN KEY (userId) REFERENCES users (id)
             )`);
 
+            // Table for storing per-user app settings / study plan configuration
+            db.run(`CREATE TABLE IF NOT EXISTS user_settings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                userId INTEGER UNIQUE,
+                examDate TEXT,
+                title TEXT,
+                dailyStudyHours REAL,
+                notificationTime TEXT,
+                customization TEXT,
+                FOREIGN KEY (userId) REFERENCES users (id)
+            )`);
+
             db.run(`CREATE TABLE IF NOT EXISTS daily_tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 studyPlanId INTEGER,
