@@ -1,97 +1,60 @@
-# Exit - Exam Preparation Planner & Notifier
+# Exit Planner (React Native Branch)
 
-A comprehensive exam preparation app that helps you plan, track, and stay on top of your study schedule with intelligent time allocation and daily notifications.
+This branch converts the app to React Native (Expo) for mobile platforms and adds AI-oriented study planning workflows.
 
-## Features
+## What’s in this branch
 
-- **🕒 Countdown Timer**: Live countdown to your exam date
-- **📚 Course Management**: Add/edit/delete courses with `weight`, `difficulty (1-5)`, and `color`
-- **📅 Smart Study Planning**: Generate daily plan proportional to `weight × difficulty` and your daily hours
-- **✅ Progress Tracking**: Mark tasks complete and record actual minutes studied
-- **🔔 Daily Notifications**: Web push at your configured time
-- **🎨 Customization**: Light/dark, primary/background colors, grid/list layout
-- **🔐 Auth**: Register/login (JWT)
+- React Native app under `mobile/` (Expo)
+- Node/Express backend under `server/`
+- New features:
+  - Upload PDFs/images/screenshots of past exams: `POST /api/materials`
+  - Weekly study plan generation: `POST /api/weekly-plans/generate`
+  - Mock exam generation (stub): `POST /api/mock-exams/generate`
+  - Existing courses with `weight`, `difficulty`, and `color`
+- Removed web `client/` app to focus this branch on mobile
 
-## What’s new in this update
+## Mobile app (Expo)
 
-- Backend data model extended:
-  - `courses`: added `weight INTEGER`, `difficulty INTEGER`, `color TEXT`
-  - `daily_tasks`: added `allocatedMinutes`, `completedMinutes`, `date`, `courseId`
-- New/updated endpoints:
-  - `POST /api/study-plans/regenerate` — regenerate today’s tasks via proportional allocation
-  - `GET /api/daily-tasks/today` — today’s tasks joined with course color/name
-  - `PUT /api/daily-tasks/:id` — toggle completion and update minutes
-  - `PUT /api/courses/:id`, `DELETE /api/courses/:id`
-  - Responses normalized to use `_id` for client compatibility
-- Notifications:
-  - Scheduler rewritten for SQLite models and user settings `notificationTime`
-  - Client service worker (`public/sw.js`) and subscription UI in `Settings` (requires VAPID keys)
+Run on a simulator or device:
 
-## Tech Stack
-
-- Backend: Node.js, Express, SQLite (`sqlite3`), JWT, `node-cron`, Web Push API
-- Frontend: React 18 (CRA), React Router, Axios, React Icons, React Colorful
-
-## Run locally (Windows PowerShell)
-
-1) Open PowerShell in project root:
-```powershell
-cd 'C:\Users\PC\Saved Games\exit_exam'
+```bash
+cd mobile
+npm install
+npm run start
 ```
 
-2) Install dependencies (root installs client and server):
-```powershell
-npm run install-all
+Then press `a` for Android emulator, `i` for iOS (macOS), or scan QR with Expo Go.
+
+The app includes screens:
+- Dashboard (with hourglass stopwatch UI)
+- Settings
+- Uploads (PDF/images)
+- Weekly Plan (generate)
+- Mock Exam (generate)
+
+If testing on a device/emulator, replace `http://localhost:5000` in mobile screens with your machine LAN IP.
+
+## Backend (Express + SQLite)
+
+Run API:
+
+```bash
+npm run server
 ```
 
-3) Start dev servers (backend + frontend concurrently):
-```powershell
-npm run dev
-```
+Defaults to `http://localhost:5000`.
 
-Frontend: `http://localhost:3000`
+### Endpoints added in this branch
+- `POST /api/materials` multipart/form-data file upload (field: `file`)
+- `GET /api/materials` list uploaded items (per user)
+- `POST /api/weekly-plans/generate` pick top two courses by `weight × difficulty` and alternate them for 7 days
+- `POST /api/mock-exams/generate` return placeholder questions structure ready for AI integration
 
-API: `http://localhost:5000`
+## Data model
 
-## Environment & Push Notifications
+- `courses`: includes `weight`, `difficulty`, `color`
+- `daily_tasks`: includes `allocatedMinutes`, `completedMinutes`, `date`, `courseId`
 
-- SQLite DB file: `server/db.sqlite` (auto-created)
-- Optional: set `PORT` to change server port
-- Web Push (browser):
-  - Set `REACT_APP_VAPID_PUBLIC_KEY` in `client` env before `npm start`
-  - Set `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in server env if you enable `webpush.setVapidDetails`
-  - In Settings page, click “Enable Push Notifications” to subscribe
-
-## Build frontend
-
-```powershell
-npm run build
-```
-
-## Building an APK (optional)
-
-This is a web app. To ship an Android APK, wrap the `client/build` with a native container (e.g., Capacitor):
-
-```powershell
-cd client
-npm install @capacitor/core @capacitor/cli @capacitor/android --save
-npx cap init exit-exam-planner com.example.exitexamplanner --web-dir build
-npm run build
-npx cap add android
-npx cap copy
-npx cap open android
-```
-
-Build APK in Android Studio: Build > Build Bundle(s)/APK(s) > Build APK(s).
-
-Note: Push inside an APK requires native FCM integration (Capacitor Push Notifications) rather than browser web-push.
-
-## Scripts
-
-- `npm run install-all` — install root, client, and server deps
-- `npm run dev` — start backend and frontend concurrently
-- `npm run build` — build the React app (client)
-
-## License
-
-ISC
+## Notes
+- This branch removes the CRA web client. Use the Expo app under `mobile/`.
+- For AI features (PDF parsing, focus areas, mock exam generation), integrate OCR/NLP or model APIs in future iterations.
