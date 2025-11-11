@@ -1,0 +1,27 @@
+{
+  "cli": {
+    "version": ">= 6.0.0"
+  },
+  "build": {
+    "preview": {
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "API_BASE_URL": "http://localhost:5000"
+      }
+    },
+    "production": {
+      "android": {
+        "gradleCommand": ":app:bundleRelease"
+      },
+      "env": {
+        "API_BASE_URL": "https://your.api.example"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
+
