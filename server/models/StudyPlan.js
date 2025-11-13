@@ -1,51 +1,31 @@
-const mongoose = require('mongoose');
+const db = require('../database.js');
 
-const studyPlanSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    unique: true
-  },
-  examDate: {
-    type: Date,
-    required: true
-  },
-  title: {
-    type: String,
-    default: 'My Exam'
-  },
-  dailyStudyHours: {
-    type: Number,
-    default: 4,
-    min: 0.5,
-    max: 16
-  },
-  notificationTime: {
-    type: String,
-    default: '09:00'
-  },
-  customization: {
-    theme: {
-      type: String,
-      default: 'light'
+const StudyPlan = {
+    create: (courseId, title, scheduledDate, userId) => {
+        const sql = 'INSERT INTO study_plans (courseId, title, scheduledDate, userId) VALUES (?, ?, ?, ?)';
+        return new Promise((resolve, reject) => {
+            db.run(sql, [courseId, title, scheduledDate, userId], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ id: this.lastID, courseId, title, scheduledDate, userId });
+                }
+            });
+        });
     },
-    primaryColor: {
-      type: String,
-      default: '#3b82f6'
-    },
-    backgroundColor: {
-      type: String,
-      default: '#ffffff'
-    },
-    layout: {
-      type: String,
-      default: 'grid'
+
+    findByUserId: (userId) => {
+        const sql = 'SELECT * FROM study_plans WHERE userId = ?';
+        return new Promise((resolve, reject) => {
+            db.all(sql, [userId], (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
     }
-  }
-}, {
-  timestamps: true
-});
+};
 
-module.exports = mongoose.model('StudyPlan', studyPlanSchema);
-
+module.exports = StudyPlan;

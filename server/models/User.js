@@ -1,34 +1,37 @@
-const mongoose = require('mongoose');
+const db = require('../database.js');
 const bcrypt = require('bcryptjs');
 
-const userSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true
-  },
-  password: {
-    type: String,
-    required: true
-  },
-  name: {
-    type: String,
-    required: true
-  }
-}, {
-  timestamps: true
-});
+const User = {
+    create: async (name, email, password) => {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const sql = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
+        return new Promise((resolve, reject) => {
+            db.run(sql, [name, email, hashedPassword], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ id: this.lastID, name, email });
+                }
+            });
+        });
+    },
 
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 10);
-  next();
-});
+    findByEmail: (email) => {
+        const sql = 'SELECT * FROM users WHERE email = ?';
+        return new Promise((resolve, reject) => {
+            db.get(sql, [email], (err, row) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(row);
+                }
+            });
+        });
+    },
 
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+    comparePassword: async (candidatePassword, hash) => {
+        return await bcrypt.compare(candidatePassword, hash);
+    }
 };
 
-module.exports = mongoose.model('User', userSchema);
-
+module.exports = User;
