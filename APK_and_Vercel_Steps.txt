@@ -1,0 +1,103 @@
+Build an APK (Capacitor) and Deploy web client to Vercel - Steps (Windows PowerShell)
+
+Prerequisites:
+- Node.js (>=16) and npm installed.
+- Android Studio with Android SDK, platform-tools, and build-tools (API 33 or similar).
+- Java JDK (11 or 17) installed (Android Studio usually provides this).
+- adb on PATH (installed with platform-tools).
+- (Optional) Vercel account and token for CLI non-interactive deploys.
+
+Where builds appear:
+- Debug APK: client\android\app\build\outputs\apk\debug\app-debug.apk
+- Unsigned release APK: client\android\app\build\outputs\apk\release\app-release-unsigned.apk
+
+Step A — Build the web client and wrap with Capacitor (once per project, then on each build):
+
+# from repository root in PowerShell (update path to your repo)
+cd 'C:\path\to\your\repo'
+npm run install-all    # installs root, client, server deps
+npm run build          # builds the client (React)
+
+# inside client: install Capacitor and initialize (only once required)
+cd client
+npm install @capacitor/core @capacitor/cli @capacitor/android --save
+
+# initialize Capacitor (non-destructive if already done)
+npx cap init exit-exam-planner com.example.exitexamplanner --web-dir build
+
+# add Android platform (only first time)
+npx cap add android
+
+# after each web build, copy web assets into native project
+npx cap copy android
+
+Step B — Build the APK using Android Studio (recommended):
+
+n# Open Android Studio project created by Capacitor
+cd client
+npx cap open android
+
+n# In Android Studio: Build > Build Bundle(s) / APK(s) > Build APK(s)
+
+n# Find debug APK at:
+client\android\app\build\outputs\apk\debug\app-debug.apk
+
+n# To create a signed release APK: Build > Generate Signed Bundle / APK... and follow prompts to provide a keystore.
+
+Step B (alternate) — Build from the command line (Gradle):
+
+ncd client\android
+n# Windows: use gradlew.bat
+.\gradlew.bat assembleDebug    # produce debug APK
+n.\gradlew.bat assembleRelease  # produce unsigned release APK (if configured)
+
+Step C — Sign a release APK (if you built an unsigned release):
+
+n# Option 1: Use Android Studio "Generate Signed Bundle / APK" (easiest).
+
+n# Option 2: Create a keystore using keytool (if you don't have one):
+keytool -genkey -v -keystore my-release-key.jks -alias my_key_alias -keyalg RSA -keysize 2048 -validity 10000
+
+n# Then sign using apksigner (part of SDK build-tools). Example (adjust paths for your SDK build-tools):
+$buildTools = "$env:LOCALAPPDATA\Android\Sdk\build-tools\33.0.2"
+$unsigned = "client\android\app\build\outputs\apk\release\app-release-unsigned.apk"
+$signed = "client\android\app\build\outputs\apk\release\app-release-signed.apk"
+& "$buildTools\apksigner.bat" sign --ks .\my-release-key.jks --ks-key-alias my_key_alias --out $signed $unsigned
+
+Step D — Install APK on a device for testing:
+
+nadb install -r "client\android\app\build\outputs\apk\debug\app-debug.apk"
+
+Vercel Deployment (web client only)
+-----------------------------------
+Vercel hosts the web app build (not the APK). Two options:
+
+nOption 1 — Vercel web UI (recommended):
+- Go to vercel.com, login, New Project -> Import from GitHub, choose this repository.
+- Vercel auto-detects Create React App; Deploy.
+
+nOption 2 — Vercel CLI (PowerShell):
+# install vercel CLI (if not installed)
+npm i -g vercel
+n# interactive login
+vercel login
+n# from client, ensure build exists and deploy the build directory
+cd client
+npm run build
+n# interactive deploy
+n npx vercel
+n# or non-interactive using a token (create token at vercel.com/account):
+npx vercel --prod --confirm --token YOUR_VERCEL_TOKEN --cwd ./build
+
+Notes, Troubleshooting, and Recommendations:
+- If `npx cap add android` fails, ensure Android Studio and SDK are installed, and ANDROID_SDK_ROOT or ANDROID_HOME point to your SDK directory.
+- If Gradle build fails, open Android Studio to inspect the errors, accept SDK licenses, and update SDK components as needed.
+- For release builds destined for Google Play: create a keystore, configure signingConfigs in `client/android/app/build.gradle`, and upload the signed/aab via Play Console.
+- If you want automated CI builds that produce signed artifacts and upload to Play Store, consider using GitHub Actions + fastlane and store credentials in GitHub Secrets. I can add that if requested.
+
+Optional additions I can make for you (tell me which):
+- Add a PowerShell helper script `scripts\build-apk.ps1` that runs the local build + cap copy + gradle assemble and prints APK path.
+- Add instructions and Gradle signing config for release builds (using a keystore stored locally or via base64 secret for CI).
+- Add automation to upload an APK to GitHub Releases or S3 after local/CI build.
+
+End of steps.

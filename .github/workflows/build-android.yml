@@ -1,0 +1,79 @@
+name: Build Android APK & Deploy to Vercel
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build APK and optionally deploy
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_SDK_ROOT: ${{ runner.tool_cache }}/android-sdk
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install repo dependencies
+        run: npm run install-all
+
+      - name: Build web client
+        run: npm run build
+
+      - name: Install Capacitor packages
+        run: |
+          cd client
+          npm install @capacitor/core @capacitor/cli @capacitor/android --no-audit --no-fund
+
+      - name: Initialize Capacitor (non-interactive)
+        run: |
+          cd client
+          npx cap init exit-exam-planner com.example.exitexamplanner --web-dir build || true
+          npx cap add android || true
+          npx cap copy android
+
+      - name: Set up Java (for Gradle)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Install Android SDK command-line tools
+        run: |
+          mkdir -p "$ANDROID_SDK_ROOT"
+          cd "$ANDROID_SDK_ROOT"
+          curl -fSL "https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip" -o cmdline-tools.zip
+          unzip -q cmdline-tools.zip -d cmdline-tools-temp
+          mkdir -p cmdline-tools/latest
+          mv cmdline-tools-temp/cmdline-tools/* cmdline-tools/latest/
+          rm -rf cmdline-tools.zip cmdline-tools-temp
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
+      - name: Accept Android SDK licenses
+        run: yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+
+      - name: Build Android APK (Debug)
+        working-directory: client/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: exit-exam-apk
+          path: client/android/app/build/outputs/apk/debug/*.apk
+
+      - name: (Optional) Deploy client to Vercel
+        if: ${{ secrets.VERCEL_TOKEN != '' }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          cd client
+          npm install -g vercel@27
+          # deploy the built client directory to Vercel using the provided token
+          npx vercel --prod --confirm --token "$VERCEL_TOKEN" --cwd ./build || true

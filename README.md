@@ -86,6 +86,25 @@ Build APK in Android Studio: Build > Build Bundle(s)/APK(s) > Build APK(s).
 
 Note: Push inside an APK requires native FCM integration (Capacitor Push Notifications) rather than browser web-push.
 
+## CI: Build APK and deploy to Vercel (GitHub Actions)
+
+This repository includes a GitHub Actions workflow that can produce an Android APK (debug) from the `client/build` using Capacitor and the Android Gradle toolchain, and optionally deploy the `client/build` to Vercel.
+
+Where the workflow lives:
+
+- `.github/workflows/build-android.yml`
+
+Secrets and artifacts
+
+- `VERCEL_TOKEN` (optional): if set in the repository secrets the workflow will attempt to deploy the `client/build` to your Vercel account using the Vercel CLI.
+
+Notes and recommendations
+
+- The workflow currently builds an unsigned debug APK (assembleDebug). For Play Store release builds you should create and provide an Android keystore and add signing configs to the Android Gradle config (or extend the workflow to accept `ANDROID_KEYSTORE` and related secrets). I can help add Play Store upload (via `fastlane` + `GOOGLE_PLAY_JSON`) if you want automated publishing.
+- Building a release and uploading to Google Play will require a Google Play service account JSON (`GOOGLE_PLAY_JSON`) and Play Console access.
+
+If you want me to add automatic Play Store upload (fastlane) and signing, reply with "add Play upload" and provide the intended package name and guidance on how you want to manage keystore/credentials (I can use repository secrets to store them).
+
 ## Scripts
 
 - `npm run install-all` — install root, client, and server deps
